@@ -174,6 +174,12 @@ function generujBilans() {
             <div><h4>PASYWA</h4>${pasywaHTML}</div>
         </div>
     `;
+
+    const eksportBtn = document.createElement("button");
+    eksportBtn.textContent = "Eksportuj bilans do CSV";
+    eksportBtn.onclick = eksportujBilansDoCSV;
+
+    bilansDiv.appendChild(eksportBtn);
 }
 
 function aktualizujStatystyki() {
@@ -195,5 +201,77 @@ function aktualizujStatystyki() {
         <p><strong>Kredytowych:</strong> ${liczbaKredyt}</p>
     `;
 }
+
+function eksportujBilansDoCSV() {
+    const dataBilansu = document.getElementById("data-bilansu").value;
+    if (!dataBilansu) {
+        alert("Najpierw wygeneruj bilans wybierając datę.");
+        return;
+    }
+
+    const aktywaKonta = [
+        "Urządzenia techniczne i maszyny",
+        "Umorzenie urządzeń technicznych i maszyn",
+        "Środki transportu",
+        "Umorzenie środków transportu",
+        "Należności z tytułu dostaw i usług od pozostałych jednostek do 12 m-cy",
+        "Środki pieniężne w kasie",
+        "Środki pieniężne na r-kach bankowych"
+    ];
+
+    const pasywaKonta = [
+        "Kapitał podstawowy",
+        "Zysk (strata) netto",
+        "Zobowiązania z tytułu dostaw i usług wobec pozostałych jednostek do 12 m-cy",
+        "Kredyty bankowe krótkoterminowe",
+        "Zobowiązania z tytułu wynagrodzeń",
+        "Zobowiązania z tytułu publicznoprawnych"
+    ];
+
+    function obliczSaldo(konto, czyAktywo) {
+        return operacjeKsiegowe[konto]
+            .filter(op => op.data <= dataBilansu)
+            .reduce((saldo, op) => {
+                if (czyAktywo) {
+                    return op.typ === "debet" ? saldo + op.kwota : saldo - op.kwota;
+                } else {
+                    return op.typ === "kredyt" ? saldo + op.kwota : saldo - op.kwota;
+                }
+            }, 0);
+    }
+
+    let csvContent = `Bilans na dzień:;${dataBilansu}\n\n`;
+    csvContent += "AKTYWA;\n";
+    let sumaAktywa = 0;
+    aktywaKonta.forEach(konto => {
+        const saldo = obliczSaldo(konto, true);
+        csvContent += `"${konto}";${saldo.toFixed(2)} zł\n`;
+        sumaAktywa += saldo;
+    });
+    csvContent += `"SUMA AKTYWÓW";${sumaAktywa.toFixed(2)} zł\n\n`;
+
+    csvContent += "PASYWA;\n";
+    let sumaPasywa = 0;
+    pasywaKonta.forEach(konto => {
+        const saldo = obliczSaldo(konto, false);
+        csvContent += `"${konto}";${saldo.toFixed(2)} zł\n`;
+        sumaPasywa += saldo;
+    });
+    csvContent += `"SUMA PASYWÓW";${sumaPasywa.toFixed(2)} zł\n`;
+
+    // Dodanie BOM na początek pliku, aby Excel rozpoznał UTF-8 z polskimi znakami
+    const BOM = "\uFEFF";
+
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `bilans_${dataBilansu}.csv`;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
 
 window.onload = init;
