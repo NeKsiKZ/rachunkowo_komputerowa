@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Rachunkowość</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <h1>Konta księgowe</h1>
+    <div id="kontener-kont"></div>
+
+    <h2>Sprawozdanie bilansowe</h2>
+    <label for="data-bilansu">Wybierz dzień:</label>
+    <input type="date" id="data-bilansu" />
+    <button onclick="generujBilans()">Generuj bilans</button>
+    <div id="bilans"></div>
+
+    <h2>Statystyki operacji</h2>
+    <div id="statystyki" style="background-color:#fff; padding:10px; border:2px solid #333;"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
